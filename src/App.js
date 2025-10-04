@@ -25,6 +25,7 @@ export default function StudyTracker() {
   const [collapsedSubjects, setCollapsedSubjects] = useState(JSON.parse(localStorage.getItem('collapsedSubjects')) || []);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [selectedSubject, setSelectedSubject] = useState(null);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
