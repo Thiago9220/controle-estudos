@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BookOpen, Plus, Trash2, CheckCircle, Circle, Clock, FileText, Calendar, Target, TrendingUp, Award, Filter, Search, Edit2, Save, X } from 'lucide-react';
 import ProgressGraphs from './components/ProgressGraphs';
 import PomodoroTimer from './components/PomodoroTimer';
+import ExportPDF from './components/ExportPDF';
 
 export default function StudyTracker() {
   const [subjects, setSubjects] = useState([]);
@@ -228,7 +229,8 @@ export default function StudyTracker() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 p-4">
-      <div className="max-w-7xl mx-auto">
+      <div id="pdf-content">
+        <div className="max-w-7xl mx-auto">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -252,6 +254,7 @@ export default function StudyTracker() {
                 <TrendingUp className="w-4 h-4" />
                 {showStats ? 'Ocultar' : 'Mostrar'} Estatísticas
               </button>
+              <ExportPDF />
             </div>
           </div>
 
@@ -567,5 +570,6 @@ export default function StudyTracker() {
         )}
       </div>
     </div>
+  </div>
   );
 }
