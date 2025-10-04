@@ -1,0 +1,84 @@
+.pomodoro-timer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  border-radius: 20px;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.pomodoro-timer-container.pomodoro {
+  background-color: #d95550;
+}
+
+.pomodoro-timer-container.shortBreak {
+  background-color: #4c9195;
+}
+
+.pomodoro-timer-container.longBreak {
+  background-color: #457ca3;
+}
+
+.timer-modes {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.timer-modes button {
+  background: none;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+}
+
+.timer-modes button.active {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+.timer-display {
+  font-size: 8rem;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 20px;
+}
+
+.control-button {
+  background: none;
+  border: 2px solid white;
+  color: white;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.control-button:hover {
+  background-color: white;
+  color: #d95550;
+}
+
+.pomodoro-timer-container.shortBreak .control-button:hover {
+  color: #4c9195;
+}
+
+.pomodoro-timer-container.longBreak .control-button:hover {
+  color: #457ca3;
+}
