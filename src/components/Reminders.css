@@ -1,0 +1,78 @@
+.reminders-container {
+  background-color: #f0f4f8;
+  padding: 30px;
+  border-radius: 15px;
+}
+
+.reminders-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.8rem;
+  color: #334e68;
+  margin-bottom: 25px;
+}
+
+.add-reminder-form {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.add-reminder-form input {
+  flex-grow: 1;
+  padding: 12px 18px;
+  border: 2px solid #dbe2e8;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+
+.add-reminder-form button {
+  background-color: #334e68;
+  color: white;
+  border: none;
+  padding: 0 25px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.add-reminder-form button:hover {
+  background-color: #243b53;
+}
+
+.reminders-list {
+  list-style: none;
+  padding: 0;
+}
+
+.reminders-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+  padding: 15px 20px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.reminders-list li span {
+  color: #334e68;
+}
+
+.reminders-list li button {
+  background: none;
+  border: none;
+  color: #9fb3c8;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.reminders-list li button:hover {
+  color: #d95550;
+}
