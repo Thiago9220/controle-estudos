@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Plus, Trash2, CheckCircle, Circle, Clock, FileText, Calendar, Target, TrendingUp, Award, Filter, Search, Edit2, Save, X } from 'lucide-react';
+import ProgressGraphs from './components/ProgressGraphs';
 
 export default function StudyTracker() {
   const [subjects, setSubjects] = useState([]);
@@ -15,6 +16,21 @@ export default function StudyTracker() {
   const [editingSubject, setEditingSubject] = useState(null);
   const [editingName, setEditingName] = useState('');
   const [showStats, setShowStats] = useState(true);
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+  };
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   useEffect(() => {
     const saved = localStorage.getItem('studySubjects');
@@ -189,21 +205,29 @@ export default function StudyTracker() {
   const completionRate = totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 p-4">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <BookOpen className="w-8 h-8 text-indigo-600" />
-              <h1 className="text-3xl font-bold text-gray-800">Controle de Estudos Pro</h1>
+              <BookOpen className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Controle de Estudos Pro</h1>
             </div>
-            <button
-              onClick={() => setShowStats(!showStats)}
-              className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-2"
-            >
-              <TrendingUp className="w-4 h-4" />
-              {showStats ? 'Ocultar' : 'Mostrar'} Estatísticas
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={toggleTheme}
+                className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200 flex items-center gap-2"
+              >
+                {theme === 'light' ? '🌙' : '☀️'}
+              </button>
+              <button
+                onClick={() => setShowStats(!showStats)}
+                className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200 flex items-center gap-2"
+              >
+                <TrendingUp className="w-4 h-4" />
+                {showStats ? 'Ocultar' : 'Mostrar'} Estatísticas
+              </button>
+            </div>
           </div>
 
           {showStats && (
@@ -507,7 +531,7 @@ export default function StudyTracker() {
           </div>
         )}
       </div>
-      
+      <ProgressGraphs subjects={subjects} />
     </div>
   );
 }
