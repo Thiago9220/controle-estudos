@@ -4,6 +4,7 @@ import ProgressGraphs from './components/ProgressGraphs';
 import PomodoroTimer from './components/PomodoroTimer';
 import ExportPDF from './components/ExportPDF';
 import Reminders from './components/Reminders';
+import Pagination from './components/Pagination';
 
 export default function StudyTracker() {
   const [subjects, setSubjects] = useState([]);
@@ -21,6 +22,9 @@ export default function StudyTracker() {
   const [showStats, setShowStats] = useState(JSON.parse(localStorage.getItem('showStats')) ?? true);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [currentView, setCurrentView] = useState(localStorage.getItem('currentView') || 'main');
+  const [collapsedSubjects, setCollapsedSubjects] = useState(JSON.parse(localStorage.getItem('collapsedSubjects')) || []);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -71,6 +75,10 @@ export default function StudyTracker() {
     localStorage.setItem('currentView', currentView);
   }, [currentView]);
 
+  useEffect(() => {
+    localStorage.setItem('collapsedSubjects', JSON.stringify(collapsedSubjects));
+  }, [collapsedSubjects]);
+
   const addSubject = () => {
     if (newSubject.trim()) {
       setSubjects([...subjects, {
@@ -105,6 +113,14 @@ export default function StudyTracker() {
       s.id === id ? { ...s, name: editingName } : s
     ));
     setEditingSubject(null);
+  };
+
+  const toggleSubjectCollapse = (id) => {
+    if (collapsedSubjects.includes(id)) {
+      setCollapsedSubjects(collapsedSubjects.filter(subId => subId !== id));
+    } else {
+      setCollapsedSubjects([...collapsedSubjects, id]);
+    }
   };
 
   const addTopic = (subjectId) => {
@@ -227,6 +243,16 @@ export default function StudyTracker() {
   );
 
   const completionRate = totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentSubjects = filteredSubjects.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredSubjects.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 p-4">
@@ -378,7 +404,7 @@ export default function StudyTracker() {
         {currentView === 'main' && (
           <>
             <div className={view === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : 'space-y-6'}>
-              {filteredSubjects.map(subject => (
+              {currentSubjects.map(subject => (
                 <div key={subject.id} className="bg-white rounded-2xl shadow-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     {editingSubject === subject.id ? (
@@ -412,6 +438,12 @@ export default function StudyTracker() {
                           />
                           <h2 className="text-2xl font-bold text-gray-800">{subject.name}</h2>
                           <button
+                            onClick={() => toggleSubjectCollapse(subject.id)}
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            {collapsedSubjects.includes(subject.id) ? '▶️' : '🔽'}
+                          </button>
+                          <button
                             onClick={() => startEditSubject(subject)}
                             className="text-gray-400 hover:text-gray-600"
                           >
@@ -444,64 +476,66 @@ export default function StudyTracker() {
                     </div>
                   </div>
 
-                  <div className="space-y-3 mb-4 max-h-96 overflow-y-auto">
-                    {subject.topics.map(topic => (
-                      <div key={topic.id} className="border-2 border-gray-100 rounded-xl p-4 hover:border-indigo-200 transition">
-                        <div className="flex items-start gap-3">
-                          <button
-                            onClick={() => toggleTopic(subject.id, topic.id)}
-                            className="mt-1"
-                          >
-                            {topic.completed ? (
-                              <CheckCircle className="w-6 h-6 text-green-500" />
-                            ) : (
-                              <Circle className="w-6 h-6 text-gray-300" />
-                            )}
-                          </button>
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between gap-2 mb-2">
-                              <span className={`font-medium ${topic.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>
-                                {topic.name}
-                              </span>
-                              <button
-                                onClick={() => deleteTopic(subject.id, topic.id)}
-                                className="text-red-400 hover:text-red-600 flex-shrink-0"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                            
-                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                              <span className={`text-xs px-2 py-1 rounded-full font-medium ${getPriorityColor(topic.priority)}`}>
-                                {getPriorityLabel(topic.priority)}
-                              </span>
-                              
-                              <span className="text-xs text-gray-500 flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {topic.studyTime}h
-                              </span>
-                              
-                              {topic.deadline && (
-                                <span className={`text-xs flex items-center gap-1 ${isOverdue(topic.deadline) && !topic.completed ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
-                                  <Calendar className="w-3 h-3" />
-                                  {new Date(topic.deadline).toLocaleDateString('pt-BR')}
-                                  {isOverdue(topic.deadline) && !topic.completed && ' ⚠️'}
-                                </span>
+                  {!collapsedSubjects.includes(subject.id) && (
+                    <div className="space-y-3 mb-4 max-h-96 overflow-y-auto">
+                      {subject.topics.map(topic => (
+                        <div key={topic.id} className="border-2 border-gray-100 rounded-xl p-4 hover:border-indigo-200 transition">
+                          <div className="flex items-start gap-3">
+                            <button
+                              onClick={() => toggleTopic(subject.id, topic.id)}
+                              className="mt-1"
+                            >
+                              {topic.completed ? (
+                                <CheckCircle className="w-6 h-6 text-green-500" />
+                              ) : (
+                                <Circle className="w-6 h-6 text-gray-300" />
                               )}
+                            </button>
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <span className={`font-medium ${topic.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                                  {topic.name}
+                                </span>
+                                <button
+                                  onClick={() => deleteTopic(subject.id, topic.id)}
+                                  className="text-red-400 hover:text-red-600 flex-shrink-0"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                              
+                              <div className="flex flex-wrap items-center gap-2 mb-2">
+                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${getPriorityColor(topic.priority)}`}>
+                                  {getPriorityLabel(topic.priority)}
+                                </span>
+                                
+                                <span className="text-xs text-gray-500 flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {topic.studyTime}h
+                                </span>
+                                
+                                {topic.deadline && (
+                                  <span className={`text-xs flex items-center gap-1 ${isOverdue(topic.deadline) && !topic.completed ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+                                    <Calendar className="w-3 h-3" />
+                                    {new Date(topic.deadline).toLocaleDateString('pt-BR')}
+                                    {isOverdue(topic.deadline) && !topic.completed && ' ⚠️'}
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <textarea
+                                value={topic.notes}
+                                onChange={(e) => updateNotes(subject.id, topic.id, e.target.value)}
+                                placeholder="Adicionar anotações..."
+                                className="w-full mt-2 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-400 focus:outline-none resize-none"
+                                rows="2"
+                              />
                             </div>
-                            
-                            <textarea
-                              value={topic.notes}
-                              onChange={(e) => updateNotes(subject.id, topic.id, e.target.value)}
-                              placeholder="Adicionar anotações..."
-                              className="w-full mt-2 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-400 focus:outline-none resize-none"
-                              rows="2"
-                            />
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="space-y-3 border-t pt-4">
                     <input
@@ -549,10 +583,15 @@ export default function StudyTracker() {
                         Adicionar
                       </button>
                     </div>
-                  </div>
-                </div>
+                  </div>                </div>
               ))}
             </div>
+
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={totalPages} 
+              onPageChange={handlePageChange} 
+            />
 
             {subjects.length === 0 && (
               <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
