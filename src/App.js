@@ -5,6 +5,7 @@ import PomodoroTimer from './components/PomodoroTimer';
 import ExportPDF from './components/ExportPDF';
 import Reminders from './components/Reminders';
 import Pagination from './components/Pagination';
+import StudyHistory from './components/StudyHistory';
 
 export default function StudyTracker() {
   const [subjects, setSubjects] = useState([]);
@@ -19,7 +20,6 @@ export default function StudyTracker() {
   const [view, setView] = useState(localStorage.getItem('view') || 'grid');
   const [editingSubject, setEditingSubject] = useState(null);
   const [editingName, setEditingName] = useState('');
-  const [showStats, setShowStats] = useState(JSON.parse(localStorage.getItem('showStats')) ?? true);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [currentView, setCurrentView] = useState(localStorage.getItem('currentView') || 'main');
   const [collapsedSubjects, setCollapsedSubjects] = useState(JSON.parse(localStorage.getItem('collapsedSubjects')) || []);
@@ -45,7 +45,11 @@ export default function StudyTracker() {
     const saved = localStorage.getItem('studySubjects');
     if (saved) {
       try {
-        setSubjects(JSON.parse(saved));
+        const parsedSubjects = JSON.parse(saved);
+        setSubjects(parsedSubjects);
+        if (parsedSubjects.length > 0) {
+          setSelectedSubject(parsedSubjects[0]);
+        }
       } catch (e) {
         console.error('Error loading data:', e);
       }
@@ -69,10 +73,6 @@ export default function StudyTracker() {
   }, [view]);
 
   useEffect(() => {
-    localStorage.setItem('showStats', JSON.stringify(showStats));
-  }, [showStats]);
-
-  useEffect(() => {
     localStorage.setItem('currentView', currentView);
   }, [currentView]);
 
@@ -82,13 +82,15 @@ export default function StudyTracker() {
 
   const addSubject = () => {
     if (newSubject.trim()) {
-      setSubjects([...subjects, {
+      const newSub = {
         id: Date.now(),
         name: newSubject,
         topics: [],
         color: getRandomColor(),
         createdAt: new Date().toISOString()
-      }]);
+      };
+      setSubjects([...subjects, newSub]);
+      setSelectedSubject(newSub);
       setNewSubject('');
     }
   };
@@ -257,8 +259,7 @@ export default function StudyTracker() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 p-4">
-      <div id="pdf-content">
-        <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -270,265 +271,122 @@ export default function StudyTracker() {
               <button onClick={() => setCurrentView('graphs')} className={`px-4 py-2 rounded-lg ${currentView === 'graphs' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>Gráficos</button>
               <button onClick={() => setCurrentView('timer')} className={`px-4 py-2 rounded-lg ${currentView === 'timer' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>Timer</button>
               <button onClick={() => setCurrentView('reminders')} className={`px-4 py-2 rounded-lg ${currentView === 'reminders' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>Lembretes</button>
+              <button onClick={() => setCurrentView('history')} className={`px-4 py-2 rounded-lg ${currentView === 'history' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>Histórico</button>
               <button
                 onClick={toggleTheme}
                 className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200 flex items-center gap-2"
               >
                 {theme === 'light' ? '🌙' : '☀️'}
               </button>
-              <button
-                onClick={() => setShowStats(!showStats)}
-                className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200 flex items-center gap-2"
-              >
-                <TrendingUp className="w-4 h-4" />
-                {showStats ? 'Ocultar' : 'Mostrar'} Estatísticas
-              </button>
               <ExportPDF />
             </div>
           </div>
 
           {currentView === 'main' && (
-            <>
-              {showStats && (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-blue-100 text-sm">Total de Tópicos</p>
-                        <p className="text-3xl font-bold">{totalTopics}</p>
-                      </div>
-                      <FileText className="w-8 h-8 opacity-80" />
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-4 text-white">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-green-100 text-sm">Concluídos</p>
-                        <p className="text-3xl font-bold">{completedTopics}</p>
-                        <p className="text-green-100 text-xs mt-1">{completionRate}% completo</p>
-                      </div>
-                      <CheckCircle className="w-8 h-8 opacity-80" />
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 text-white">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-purple-100 text-sm">Horas Estudadas</p>
-                        <p className="text-3xl font-bold">{totalHours}h</p>
-                      </div>
-                      <Clock className="w-8 h-8 opacity-80" />
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-4 text-white">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-red-100 text-sm">Atrasados</p>
-                        <p className="text-3xl font-bold">{overdueTopics}</p>
-                      </div>
-                      <Target className="w-8 h-8 opacity-80" />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-3 mb-6">
-                <input
-                  type="text"
-                  value={newSubject}
-                  onChange={(e) => setNewSubject(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && addSubject()}
-                  placeholder="Nova matéria (ex: Matemática, Português...)"
-                  className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none transition"
-                />
-                <button
-                  onClick={addSubject}
-                  className="bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 transition flex items-center gap-2 font-medium"
-                >
-                  <Plus className="w-5 h-5" />
-                  Adicionar
-                </button>
-              </div>
-
-              <div className="flex flex-wrap gap-3 items-center">
-                <div className="flex-1 min-w-[200px]">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <div className="flex gap-6">
+              <div className="w-1/3">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold">Matérias</h2>
+                  <div className="flex gap-2">
                     <input
                       type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Buscar tópicos..."
-                      className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-400 focus:outline-none"
+                      value={newSubject}
+                      onChange={(e) => setNewSubject(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && addSubject()}
+                      placeholder="Nova matéria..."
+                      className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:outline-none transition"
                     />
+                    <button
+                      onClick={addSubject}
+                      className="bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700 transition"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
-
-                <select
-                  value={filterPriority}
-                  onChange={(e) => setFilterPriority(e.target.value)}
-                  className="px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-400 focus:outline-none"
-                >
-                  <option value="all">Todas Prioridades</option>
-                  <option value="high">Alta Prioridade</option>
-                  <option value="medium">Média Prioridade</option>
-                  <option value="low">Baixa Prioridade</option>
-                </select>
-
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-400 focus:outline-none"
-                >
-                  <option value="all">Todos Status</option>
-                  <option value="pending">Pendentes</option>
-                  <option value="completed">Concluídos</option>
-                  <option value="overdue">Atrasados</option>
-                </select>
-
-                <button
-                  onClick={() => setView(view === 'grid' ? 'list' : 'grid')}
-                  className="px-4 py-2 border-2 border-gray-200 rounded-lg hover:border-indigo-400 transition"
-                >
-                  {view === 'grid' ? '📋 Lista' : '📊 Grade'}
-                </button>
-              </div>
-            </>
-          )}
-          {currentView === 'graphs' && <ProgressGraphs subjects={subjects} />}
-          {currentView === 'timer' && <PomodoroTimer />}
-          {currentView === 'reminders' && <Reminders />}
-        </div>
-
-        {currentView === 'main' && (
-          <>
-            <div className={view === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : 'space-y-6'}>
-              {currentSubjects.map(subject => (
-                <div key={subject.id} className="bg-white rounded-2xl shadow-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    {editingSubject === subject.id ? (
-                      <div className="flex items-center gap-2 flex-1">
-                        <input
-                          type="text"
-                          value={editingName}
-                          onChange={(e) => setEditingName(e.target.value)}
-                          className="flex-1 px-3 py-2 border-2 border-indigo-400 rounded-lg focus:outline-none"
-                          autoFocus
-                        />
-                        <button
-                          onClick={() => saveEditSubject(subject.id)}
-                          className="text-green-600 hover:text-green-700"
-                        >
-                          <Save className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => setEditingSubject(null)}
-                          className="text-gray-600 hover:text-gray-700"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
+                <div className="space-y-2">
+                  {subjects.map(subject => (
+                    <div 
+                      key={subject.id} 
+                      className={`p-4 rounded-lg cursor-pointer ${selectedSubject?.id === subject.id ? 'bg-indigo-100 dark:bg-indigo-900' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                      onClick={() => setSelectedSubject(subject)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">{subject.name}</span>
+                        <span className="text-sm text-gray-500">{getProgress(subject)}%</span>
                       </div>
-                    ) : (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-4 h-4 rounded-full"
-                            style={{ backgroundColor: subject.color }}
-                          />
-                          <h2 className="text-2xl font-bold text-gray-800">{subject.name}</h2>
-                          <button
-                            onClick={() => toggleSubjectCollapse(subject.id)}
-                            className="text-gray-400 hover:text-gray-600"
-                          >
-                            {collapsedSubjects.includes(subject.id) ? '▶️' : '🔽'}
-                          </button>
-                          <button
-                            onClick={() => startEditSubject(subject)}
-                            className="text-gray-400 hover:text-gray-600"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                        <button
-                          onClick={() => deleteSubject(subject.id)}
-                          className="text-red-500 hover:text-red-700 transition"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-600">Progresso</span>
-                      <span className="text-sm font-bold text-indigo-600">{getProgress(subject)}%</span>
+                      <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                        <div
+                          className="h-1.5 rounded-full"
+                          style={{ 
+                            width: `${getProgress(subject)}%`,
+                            backgroundColor: subject.color
+                          }}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="h-3 rounded-full transition-all duration-500"
-                        style={{ 
-                          width: `${getProgress(subject)}%`,
-                          backgroundColor: subject.color
-                        }}
-                      />
+                  ))}
+                </div>
+              </div>
+              <div className="w-2/3">
+                {selectedSubject ? (
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{selectedSubject.name}</h2>
+                      <button
+                        onClick={() => deleteSubject(selectedSubject.id)}
+                        className="text-red-500 hover:text-red-700 transition"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
                     </div>
-                  </div>
-
-                  {!collapsedSubjects.includes(subject.id) && (
                     <div className="space-y-3 mb-4 max-h-96 overflow-y-auto">
-                      {subject.topics.map(topic => (
-                        <div key={topic.id} className="border-2 border-gray-100 rounded-xl p-4 hover:border-indigo-200 transition">
+                      {selectedSubject.topics.map(topic => (
+                        <div key={topic.id} className="border-2 border-gray-100 dark:border-gray-700 rounded-xl p-4 hover:border-indigo-200 dark:hover:border-indigo-500 transition">
                           <div className="flex items-start gap-3">
                             <button
-                              onClick={() => toggleTopic(subject.id, topic.id)}
+                              onClick={() => toggleTopic(selectedSubject.id, topic.id)}
                               className="mt-1"
                             >
                               {topic.completed ? (
                                 <CheckCircle className="w-6 h-6 text-green-500" />
                               ) : (
-                                <Circle className="w-6 h-6 text-gray-300" />
+                                <Circle className="w-6 h-6 text-gray-300 dark:text-gray-500" />
                               )}
                             </button>
                             <div className="flex-1">
                               <div className="flex items-start justify-between gap-2 mb-2">
-                                <span className={`font-medium ${topic.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                                <span className={`font-medium ${topic.completed ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-200'}`}>
                                   {topic.name}
                                 </span>
                                 <button
-                                  onClick={() => deleteTopic(subject.id, topic.id)}
+                                  onClick={() => deleteTopic(selectedSubject.id, topic.id)}
                                   className="text-red-400 hover:text-red-600 flex-shrink-0"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
                               </div>
-                              
                               <div className="flex flex-wrap items-center gap-2 mb-2">
                                 <span className={`text-xs px-2 py-1 rounded-full font-medium ${getPriorityColor(topic.priority)}`}>
                                   {getPriorityLabel(topic.priority)}
                                 </span>
-                                
-                                <span className="text-xs text-gray-500 flex items-center gap-1">
+                                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
                                   {topic.studyTime}h
                                 </span>
-                                
                                 {topic.deadline && (
-                                  <span className={`text-xs flex items-center gap-1 ${isOverdue(topic.deadline) && !topic.completed ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+                                  <span className={`text-xs flex items-center gap-1 ${isOverdue(topic.deadline) && !topic.completed ? 'text-red-600 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
                                     <Calendar className="w-3 h-3" />
                                     {new Date(topic.deadline).toLocaleDateString('pt-BR')}
                                     {isOverdue(topic.deadline) && !topic.completed && ' ⚠️'}
                                   </span>
                                 )}
                               </div>
-                              
                               <textarea
                                 value={topic.notes}
-                                onChange={(e) => updateNotes(subject.id, topic.id, e.target.value)}
+                                onChange={(e) => updateNotes(selectedSubject.id, topic.id, e.target.value)}
                                 placeholder="Adicionar anotações..."
-                                className="w-full mt-2 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-400 focus:outline-none resize-none"
+                                className="w-full mt-2 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:border-indigo-400 focus:outline-none resize-none"
                                 rows="2"
                               />
                             </div>
@@ -536,83 +394,65 @@ export default function StudyTracker() {
                         </div>
                       ))}
                     </div>
-                  )}
-
-                  <div className="space-y-3 border-t pt-4">
-                    <input
-                      type="text"
-                      value={newTopic[subject.id] || ''}
-                      onChange={(e) => setNewTopic({ ...newTopic, [subject.id]: e.target.value })}
-                      onKeyPress={(e) => e.key === 'Enter' && addTopic(subject.id)}
-                      placeholder="Novo tópico..."
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-400 focus:outline-none text-sm"
-                    />
-                    
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-3 border-t dark:border-gray-700 pt-4">
                       <input
-                        type="number"
-                        value={studyTime[subject.id] || ''}
-                        onChange={(e) => setStudyTime({ ...studyTime, [subject.id]: e.target.value })}
-                        placeholder="Horas"
-                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-400 focus:outline-none text-sm"
+                        type="text"
+                        value={newTopic[selectedSubject.id] || ''}
+                        onChange={(e) => setNewTopic({ ...newTopic, [selectedSubject.id]: e.target.value })}
+                        onKeyPress={(e) => e.key === 'Enter' && addTopic(selectedSubject.id)}
+                        placeholder="Novo tópico..."
+                        className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:border-indigo-400 focus:outline-none text-sm"
                       />
-                      
-                      <select
-                        value={priority[subject.id] || 'medium'}
-                        onChange={(e) => setPriority({ ...priority, [subject.id]: e.target.value })}
-                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-400 focus:outline-none text-sm"
-                      >
-                        <option value="low">Baixa Prioridade</option>
-                        <option value="medium">Média Prioridade</option>
-                        <option value="high">Alta Prioridade</option>
-                      </select>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="number"
+                          value={studyTime[selectedSubject.id] || ''}
+                          onChange={(e) => setStudyTime({ ...studyTime, [selectedSubject.id]: e.target.value })}
+                          placeholder="Horas"
+                          className="px-3 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:border-indigo-400 focus:outline-none text-sm"
+                        />
+                        <select
+                          value={priority[selectedSubject.id] || 'medium'}
+                          onChange={(e) => setPriority({ ...priority, [selectedSubject.id]: e.target.value })}
+                          className="px-3 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:border-indigo-400 focus:outline-none text-sm"
+                        >
+                          <option value="low">Baixa Prioridade</option>
+                          <option value="medium">Média Prioridade</option>
+                          <option value="high">Alta Prioridade</option>
+                        </select>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="date"
+                          value={deadline[selectedSubject.id] || ''}
+                          onChange={(e) => setDeadline({ ...deadline, [selectedSubject.id]: e.target.value })}
+                          className="flex-1 px-3 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:border-indigo-400 focus:outline-none text-sm"
+                        />
+                        <button
+                          onClick={() => addTopic(selectedSubject.id)}
+                          className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Adicionar
+                        </button>
+                      </div>
                     </div>
-
-                    <div className="flex gap-2">
-                      <input
-                        type="date"
-                        value={deadline[subject.id] || ''}
-                        onChange={(e) => setDeadline({ ...deadline, [subject.id]: e.target.value })}
-                        className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-indigo-400 focus:outline-none text-sm"
-                      />
-                      
-                      <button
-                        onClick={() => addTopic(subject.id)}
-                        className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center gap-2"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Adicionar
-                      </button>
-                    </div>
-                  </div>                </div>
-              ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500">Selecione uma matéria para ver os detalhes.</p>
+                  </div>
+                )}
+              </div>
             </div>
+          )}
 
-            <Pagination 
-              currentPage={currentPage} 
-              totalPages={totalPages} 
-              onPageChange={handlePageChange} 
-            />
-
-            {subjects.length === 0 && (
-              <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-                <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">Nenhuma matéria ainda</h3>
-                <p className="text-gray-400">Comece adicionando uma matéria acima!</p>
-              </div>
-            )}
-
-            {subjects.length > 0 && filteredSubjects.length === 0 && (
-              <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-                <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">Nenhum resultado encontrado</h3>
-                <p className="text-gray-400">Tente ajustar os filtros de busca</p>
-              </div>
-            )}
-          </>
-        )}
+          {currentView === 'graphs' && <ProgressGraphs subjects={subjects} />}
+          {currentView === 'timer' && <PomodoroTimer />}
+          {currentView === 'reminders' && <Reminders />}
+          {currentView === 'history' && <StudyHistory subjects={subjects} />}
+        </div>
       </div>
     </div>
-  </div>
   );
 }

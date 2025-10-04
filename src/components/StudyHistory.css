@@ -1,0 +1,72 @@
+.study-history-container {
+  padding: 2rem;
+}
+
+.summary-indicators {
+  display: flex;
+  justify-content: space-around;
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.summary-indicators h3 {
+  margin: 0 0 0.5rem 0;
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+.summary-indicators p {
+  margin: 0;
+  color: #212529;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+thead {
+  background-color: #e9ecef;
+}
+
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #dee2e6;
+  white-space: nowrap;
+}
+
+tbody tr:hover {
+  background-color: #f1f3f5;
+}
+
+.revisions span {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+  border-radius: 50%;
+  margin: 0 2px;
+  font-size: 0.8rem;
+}
+
+.revisions .done {
+  background-color: #28a745;
+  color: white;
+}
+
+.revisions .pending {
+  background-color: #e9ecef;
+  color: #6c757d;
+}
