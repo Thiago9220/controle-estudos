@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Plus, Trash2, CheckCircle, Circle, Clock, FileText, Calendar, Target, TrendingUp, Award, Filter, Search, Edit2, Save, X } from 'lucide-react';
 import ProgressGraphs from './components/ProgressGraphs';
+import PomodoroTimer from './components/PomodoroTimer';
 
 export default function StudyTracker() {
   const [subjects, setSubjects] = useState([]);
@@ -237,6 +238,7 @@ export default function StudyTracker() {
             <div className="flex items-center gap-4">
               <button onClick={() => setCurrentView('main')} className={`px-4 py-2 rounded-lg ${currentView === 'main' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>Principal</button>
               <button onClick={() => setCurrentView('graphs')} className={`px-4 py-2 rounded-lg ${currentView === 'graphs' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>Gráficos</button>
+              <button onClick={() => setCurrentView('timer')} className={`px-4 py-2 rounded-lg ${currentView === 'timer' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>Timer</button>
               <button
                 onClick={toggleTheme}
                 className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200 flex items-center gap-2"
@@ -364,6 +366,7 @@ export default function StudyTracker() {
             </>
           )}
           {currentView === 'graphs' && <ProgressGraphs subjects={subjects} />}
+          {currentView === 'timer' && <PomodoroTimer />}
         </div>
 
         {currentView === 'main' && (
